@@ -2031,6 +2031,7 @@ bool InnerWidget::searchReceived(
 					message,
 					MTPDmessage_ClientFlags(),
 					NewMessageType::Existing);
+				if (!item) continue;
 				const auto history = item->history();
 				if (!uniquePeers || !hasHistoryInResults(history)) {
 					_searchResults.push_back(
