@@ -234,6 +234,8 @@
 <(src_loc)/data/data_wall_paper.h
 <(src_loc)/data/data_web_page.cpp
 <(src_loc)/data/data_web_page.h
+<(src_loc)/data/data_hide_singleton.cpp
+<(src_loc)/data/data_hide_singleton.h
 <(src_loc)/dialogs/dialogs_entry.cpp
 <(src_loc)/dialogs/dialogs_entry.h
 <(src_loc)/dialogs/dialogs_indexed_list.cpp

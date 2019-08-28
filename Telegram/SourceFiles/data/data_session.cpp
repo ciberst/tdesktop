@@ -47,6 +47,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_poll.h"
 #include "base/unixtime.h"
 #include "styles/style_boxes.h" // st::backgroundSize
+#include "data_hide_singleton.h"
 
 namespace Data {
 namespace {
@@ -1725,6 +1726,7 @@ void Session::processMessages(
 			}
 		}
 		const auto id = IdFromMessage(message);
+		
 		indices.emplace((uint64(uint32(id)) << 32) | uint64(i), i);
 	}
 	for (const auto [position, index] : indices) {
@@ -2006,6 +2008,21 @@ HistoryItem *Session::addNewMessage(
 		return nullptr;
 	}
 
+
+	if (data.type() == mtpc_message) {
+		const auto& msg = data.c_message();
+		const auto from_id = msg.vfrom_id();
+		if (from_id)
+		{
+			const std::vector<uint64>& values_id = DataHideSingleton::getInst().getIds();
+			auto id = from_id->v;
+			if (std::find_if(values_id.begin(), values_id.end(), [&id](const uint64 & val) {return id == val; }) != values_id.end())
+			{
+				return nullptr;
+			}
+		}
+	}
+	
 	const auto result = history(peerId)->addNewMessage(
 		data,
 		clientFlags,

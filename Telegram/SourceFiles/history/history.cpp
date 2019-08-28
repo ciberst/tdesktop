@@ -42,6 +42,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/unixtime.h"
 #include "styles/style_dialogs.h"
 #include <memory>
+#include "data/data_hide_singleton.h"
 
 namespace {
 
@@ -613,7 +614,11 @@ std::vector<not_null<HistoryItem*>> History::createItems(
 		const auto detachExistingItem = true;
 		const auto item = createItem(*--i, clientFlags, detachExistingItem);
 		if (item) {
-			result.emplace_back(item);
+			const std::vector<uint64>& values_id = DataHideSingleton::getInst().getIds();
+			bool flag = false;
+			auto id = item->from()->id;
+			auto it = std::find_if(values_id.begin(), values_id.end(), [&id](const uint64 & val) {return id == val;});
+			if (it == values_id.end()) result.emplace_back(item);
 		}
 	}
 	return result;
@@ -1330,7 +1335,7 @@ void History::addItemToBlock(not_null<HistoryItem*> item) {
 	Expects(!item->mainView());
 
 	auto block = prepareBlockForAddingItem();
-
+	
 	block->messages.push_back(item->createView(
 		HistoryInner::ElementDelegate()));
 	const auto view = block->messages.back().get();
