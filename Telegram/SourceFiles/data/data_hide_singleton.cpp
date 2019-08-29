@@ -1,6 +1,9 @@
 #include "data_hide_singleton.h"
 #include <fstream>
 #include <charconv>
+#include <QtCore/QFile>
+#include "config.h"
+
 std::unique_ptr<DataHideSingleton> DataHideSingleton::_inst;
 
 DataHideSingleton& DataHideSingleton::getInst()
@@ -20,35 +23,33 @@ void DataHideSingleton::addId(uint64 data)
 {
 	std::unique_lock<std::mutex> lock(_mutex);
 	_hide_ids.push_back(data);
-	std::ofstream file("hide_ids.txt", std::ios::app);
-	if (file.is_open())
+	QFile file((_dir.endsWith('/') ? _dir : (_dir + '/')) + "hide_ids.txt");
+	if (file.open(QIODevice::Append | QIODevice::Text))
 	{
-		file << std::to_string(data).append("\n");
+		QTextStream out(&file);
+		out << QString(std::to_string(data).append("\n").c_str());
 		file.close();
 	}
 }
 
 
 DataHideSingleton::DataHideSingleton()
-{
-	std::ifstream file("hide_ids.txt");
-	if (file.is_open())
-	{
-		std::string line;
-		while(std::getline(file, line))
-		{
-			if (line.empty()) continue;
-			int32 value;
-			if (auto [p, ec] = std::from_chars(line.data(), line.data() + line.size(), value); ec == std::errc())
-			{
-				_hide_ids.push_back(value);
-			}
-		}
-
+	: _dir{cWorkingDir()}
+{	
+	QFile file((_dir.endsWith('/') ? _dir : (_dir + '/')) + "hide_ids.txt");
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+		file.open(QIODevice::WriteOnly | QIODevice::Text);
+		return;
 	}
-	else
-	{
-		std::ofstream file_test("hide_ids.txt");
-		if (file.is_open()) file_test.close();
+	QTextStream in(&file);
+	std::string line;
+	while (!in.atEnd()) {
+		line = in.readLine().toStdString();
+		if (line.empty()) continue;
+		int32 value;
+		if (auto [p, ec] = std::from_chars(line.data(), line.data() + line.size(), value); ec == std::errc())
+		{
+			_hide_ids.push_back(value);
+		}
 	}
 }
